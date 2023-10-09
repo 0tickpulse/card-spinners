@@ -1,11 +1,18 @@
 use std::io::Write;
+use clap::Parser;
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 mod card;
 extern crate rand;
 
-const SIMULATIONS: u32 = 10000000;
+#[derive(Parser)]
+struct Cli {
+    #[clap(default_value = "1000")]
+    threads: u32,
+}
 
 fn main() {
+    let args = Cli::parse();
+    let simulations = 1000 * args.threads;
     let mut stdout = StandardStream::stdout(ColorChoice::Always);
 
     stdout
@@ -37,12 +44,12 @@ fn main() {
         .unwrap();
     writeln!(&mut stdout, "== SIMULATION DETAILS ==").unwrap();
     stdout.reset().unwrap();
-    writeln!(&mut stdout, "Number of simulations: {}", SIMULATIONS).unwrap();
-    writeln!(&mut stdout, "Number of threads: {}", SIMULATIONS / 1000).unwrap();
+    writeln!(&mut stdout, "Number of threads: {}", args.threads).unwrap();
+    writeln!(&mut stdout, "Number of simulations: {}", simulations).unwrap();
 
     // create threads
     let mut threads = Vec::new();
-    for _ in 0..SIMULATIONS / 1000 {
+    for _ in 0..args.threads {
         threads.push(std::thread::spawn(|| {
             let mut wins = 0;
             let mut losses = 0;
@@ -79,7 +86,7 @@ fn main() {
     writeln!(
         &mut stdout,
         "Win percentage: {:.2}%",
-        (wins as f32 / SIMULATIONS as f32) * 100.0
+        (wins as f32 / simulations as f32) * 100.0
     )
     .unwrap();
 }
